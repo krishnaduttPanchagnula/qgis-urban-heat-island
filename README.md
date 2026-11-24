@@ -2,16 +2,30 @@
 
 ![Urban Heat Island plugin icon](uhi_landsat/icon.svg)
 
-A QGIS 3 plugin: give it a date, location name, latitude/longitude and a radius (km).
-It finds the least-cloudy Landsat 8/9 scene within ±7 days, reads thermal bands
-10 and 11, computes land surface temperature (LST), and adds two styled layers:
+A QGIS tool for GIS analysts: give it a place, a date and a radius, and it makes
+two ready-to-use maps showing how hot the ground is and where the hottest parts
+of the city are.
 
-- `LST_<location>_<date>` — continuous surface temperature in °C (Float32)
-- `UHI_<location>_<date>` — five heat-intensity classes (Byte, 0 = no data)
+## What it does
 
-## Download and install
+The plugin looks for a Landsat satellite image of your area close to the date you
+choose, reads the two heat-sensing channels on the satellite, and adds two layers
+to your QGIS project:
 
-Download `uhi_landsat_plugin.zip` from the
+- **LST (land surface temperature)** — a colour map of how warm the ground is, in °C.
+  Blue is cooler, red is hotter.
+- **UHI (urban heat island)** — an easier-to-read map with five heat zones:
+  cool, slightly cool, average, warm, and hot spot.
+
+You do not need to know how to process satellite imagery. You just fill in a
+short form and the maps appear in your layer panel.
+
+**No QGIS?** There is also a standalone desktop app with exactly the same logic in
+[`desktop_app/`](desktop_app/README.md).
+
+## Install
+
+Download `uhi_landsat_plugin_v1.0.0.zip` from the
 [latest release](https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island/releases/latest),
 or install straight from QGIS:
 
@@ -23,90 +37,88 @@ or install straight from QGIS:
 Manual install: unzip the release into your QGIS Python plugins folder, e.g.
 `~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/`, so that
 `uhi_landsat/metadata.txt` sits directly under that folder. Restart QGIS and
-enable the plugin in *Plugins → Manage and Install Plugins*. The city/heat SVG
-icon appears in the plugin manager and on the plugin toolbar.
+enable the plugin in *Plugins → Manage and Install Plugins*. The city/heat icon
+appears in the plugin manager and on the toolbar.
 
-No pip dependencies: QGIS already ships numpy and GDAL.
+No extra software is needed — QGIS already includes everything the plugin needs.
 
-## Multiple data sources with fallback
+## Before you start: getting the satellite data
 
-Scene discovery tries two public catalogues in order:
+The satellite files are free, but you need one of these three ways to reach them.
+Pick whichever is easiest for you:
 
-1. **USGS LandsatLook STAC** — has exact Level-1 B10/B11 asset names (primary).
-2. **Element84 Earth Search STAC** — used if the first catalogue is unreachable;
-   its Level-2 scene ID is converted to the matching Level-1 product ID.
-
-Band download tries sources in this order (the **Data source** combo lets you pin one):
-
-| Source | Needs | Notes |
+| Option | What you need | Best for |
 |---|---|---|
-| **Local folder** | B10/B11/QA_PIXEL/MTL.json downloaded by you | First choice when a folder is entered; fully offline |
-| **AWS S3** | `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` or `~/.aws/credentials` | `usgs-landsat` bucket is requester-pays; small egress charge |
-| **USGS HTTPS** | a logged-in USGS session cookie | Paste the cookie into the field, or set `USGS_COOKIE` in the environment |
+| **Folder on my computer** | The satellite files already downloaded from USGS EarthExplorer into one folder | Offline work, or if you do not have cloud accounts |
+| **AWS account** | An Amazon Web Services account (downloads cost a few cents) | Automatic download, no manual searching |
+| **USGS website login** | Your USGS EarthExplorer login cookie | Automatic download with an existing USGS account |
 
-With **Auto (try all sources)**, each source is attempted and the first one whose
-bands and MTL open successfully wins. If all fail, the message bar shows the reason
-from every source. The source actually used is shown in the success message and
-stored as a `SOURCE_USED` tag on the output rasters.
+Leave the source on **Automatic – try all options** and the plugin will try each
+available option in turn and use the first one that works. If one fails, you will
+see the reason and it will move to the next one.
 
-Be aware: anonymous access to the S3 bucket (403) and to USGS HTTPS (login redirect)
-does not work — that is why credentials or a local folder are required for recent data.
+## How to use it
 
-## Responsiveness and memory
+1. Click the heat-island icon in the QGIS toolbar (or find it in the *Plugins* menu).
+2. **Date** — choose the day you are interested in. A dry, cloud-free day works best.
+   If there is no satellite pass on that exact day, the plugin looks up to one week
+   before or after and uses the clearest image it finds.
+3. **Location name** — type a name such as `Milan`. This is only used to name the
+   output layers.
+4. **Latitude / Longitude** — the centre of the area. You can read these off the
+   QGIS status bar by clicking on the map.
+5. **Radius (km)** — how far around that point to map. 20 km is a good start.
+6. **Output folder** — where the two maps will be saved.
+7. **Where to get the data** — choose one of the three options above. If you pick
+   *Folder on my computer*, click `...` and select the folder.
+8. Click **OK**. A progress bar appears; you can cancel at any time. QGIS stays
+   usable while it works.
 
-- Everything runs in a `QgsTask` (worker thread): catalogue search, downloads and
-  raster computation never block the QGIS GUI, and **Cancel** is honoured between blocks.
-- No `gdal.Warp(... format="MEM")` and no whole-scene arrays. A common pixel window
-  is computed from B10's geotransform; B10, B11 and QA_PIXEL are read in 512-row
-  blocks, LST is streamed to a GeoTIFF, then the UHI classes are streamed from that
-  local file. Peak RAM is a few MB per block regardless of radius; UHI is stored
-  as one byte per pixel.
-- Outputs use LZW + tiling with 256px blocks, so QGIS pans/zooms without loading
-  the whole raster.
+Two layers then appear in your layer panel, already coloured and ready to use.
+A message at the bottom of QGIS tells you which data source worked and the average
+temperature for your area.
 
-## Algorithm
+## Understanding the maps
 
-1. B10/B11 DN → TOA radiance using `RADIANCE_MULT/ADD_BAND_10/11` from `MTL.json`.
-2. Radiance → brightness temperature using the scene's `K1`/`K2` thermal constants.
-3. Split-window LST: `T = TB10 + A·(TB10−TB11) + B·(TB10−TB11)² + C`, then −273.15 °C.
-   Current coefficients: A=1, B=0, C=0 (module constants in `uhi_core.py`).
-4. Clear-sky mask from `QA_PIXEL` (bit 6 clear, bit 7 water excluded) plus a
-   −30…80 °C sanity range.
-5. UHI classes are based on the mean and standard deviation accumulated over all
-   blocks: `< mean−0.5σ`, `mean−0.5σ…mean`, `mean…mean+0.5σ`,
-   `mean+0.5σ…mean+1.5σ`, `≥ mean+1.5σ`.
+- The **LST** layer shows actual ground temperature in °C. Use it to compare
+  neighbourhoods or to find the warmest surfaces.
+- The **UHI** layer sorts the area into five zones relative to the average for
+  that image: `1` cool, `2` slightly cool, `3` average, `4` warm, `5` hot spot.
+  Value `0` means no result — usually cloud or water.
+- The zones are **relative to the area and date you chose**. They are excellent
+  for spotting heat patterns within one map, but two maps from different dates
+  should only be compared if you used the same area and settings.
+
+## Practical tips
+
+- Cloudy days hide the ground. Try a dry month, or let the plugin pick the
+  clearest nearby date.
+- Cloudy and water pixels are automatically left out, so they will not distort
+  your results.
+- Larger radii take longer to process. Start with 20 km and increase if needed.
+- Only Landsat 8 and 9 are supported (the satellites with heat channels 10 and 11).
+- Something not working? Open an
+  [issue](https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island/issues)
+  with the message from QGIS and the date and place you entered.
+
+## For the technically minded
+
+Scene discovery uses the public USGS LandsatLook and Element84 Earth Search STAC
+catalogues. Band files come from the first working of: local folder, the
+requester-pays `usgs-landsat` S3 bucket, or `landsatlook.usgs.gov` with a session
+cookie. Temperature is a split-window estimate,
+`T = T10 + A·(T10−T11) + B·(T10−T11)² + C` with A=1, B=0, C=0, after radiance and
+brightness-temperature conversion using the scene MTL file. Clear-sky pixels are
+selected with QA_PIXEL bits 6 and 7. Processing is streamed in 512-row blocks, so
+peak memory stays near 100 MB. Every output GeoTIFF stores provenance: source used,
+scene ID, acquisition time, band paths, retrieval time, licence and coefficients.
 
 `shortcut: the split-window uses fixed coefficients (clear sky, ~0.97 emissivity),
 so this is a relative heat-island product, not a calibrated absolute temperature.
-For quantitative absolute LST, use USGS Collection 2 Level-2 ST_B10, which has
-per-pixel atmospheric and emissivity correction.`
+For absolute LST, use USGS Collection 2 Level-2 ST_B10.`
 
-Every output GeoTIFF carries provenance tags: source used, sources tried, scene ID,
-acquisition time, band paths, retrieval time, license and algorithm coefficients.
+## Tests
 
-## Limits
-
-- UHI classes are relative to the clipped scene; different dates are directly
-  comparable only if you use the same extent and calibration.
-- Landsat 8/9 only (thermal bands 10/11); Landsat 5/7 band 6 is not supported.
-- Requested areas outside the selected scene are rejected rather than padded.
-- Google's public Landsat bucket was checked but only holds ~2015 data, so it is
-  not offered as a source.
-
-## Repository branding
-
-The repo About has a description, homepage pointing to the latest release, and topics
-(`qgis`, `qgis-plugin`, `landsat`, `urban-heat-island`, `land-surface-temperature`,
-`remote-sensing`, `thermal-imaging`, `geospatial`, `gis`, `python`, `raster`,
-`heat-island`, `stac`, `open-data`).
-
-The plugin/app icon is `uhi_landsat/icon.svg` — it appears in QGIS's plugin manager
-and toolbar and in the custom-repository listing. `social-preview.svg` and its
-rendered `social-preview.png` provide the repo social-preview image. GitHub does not
-expose an API for that image, so upload `social-preview.png` once under
-*Settings → General → Social preview*.
-
-## Test
-
-`python3 tests/test_core.py` — checks the pure logic without QGIS installed.
-`python3 tests/test_integration.py` — end-to-end test with real GDAL bindings.
+- `python3 tests/test_core.py` — pure logic, no QGIS needed.
+- `python3 tests/test_integration.py` — end-to-end with real GDAL bindings.
+- `python3 tests/test_desktop.py` — desktop app worker with real GDAL bindings.

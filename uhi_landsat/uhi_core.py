@@ -40,10 +40,10 @@ CLASS_LABELS = {
 }
 
 SOURCE_LABELS = {
-    "auto": "Auto (try all sources)",
-    "local": "Local folder",
-    "aws_s3": "AWS S3 (requester-pays)",
-    "usgs_https": "USGS HTTPS (login cookie)",
+    "auto": "Automatic",
+    "local": "Folder on my computer",
+    "aws_s3": "AWS account",
+    "usgs_https": "USGS website login",
 }
 
 
@@ -140,7 +140,8 @@ def find_scene(lat, lon, radius_km, day, days=7):
             return bbox, feature
         except Exception as exc:
             failures.append("{}: {}".format(name, exc))
-    raise RuntimeError("Scene search failed. " + "; ".join(failures))
+    raise RuntimeError("Could not find a suitable satellite image near the chosen date. "
+                       + "; ".join(failures))
 
 
 def _vsi_path(href):
@@ -157,7 +158,7 @@ def _local_path(local_dir, href):
         for name in files:
             if name.upper() == wanted:
                 return os.path.join(root, name)
-    raise RuntimeError("No file named {}".format(os.path.basename(href)))
+    raise RuntimeError("The selected folder does not contain {}".format(os.path.basename(href)))
 
 
 def source_paths(source, item, local_dir=None):
@@ -198,7 +199,7 @@ def _prepare_source(source, cookie):
         gdal.SetConfigOption("AWS_REQUEST_PAYER", "requester")
         if not (os.environ.get("AWS_ACCESS_KEY_ID")
                 or os.path.isfile(os.path.expanduser("~/.aws/credentials"))):
-            raise RuntimeError("No AWS credentials found")
+            raise RuntimeError("No AWS account details found. Add them or choose another option.")
     else:
         gdal.SetConfigOption("AWS_REQUEST_PAYER", "")
     if cookie:
@@ -213,7 +214,7 @@ def open_source(source, item, local_dir, cookie):
     paths = source_paths(source, item, local_dir)
     datasets = [gdal.Open(paths[key]) for key in ("b10", "b11", "qa")]
     if any(ds is None for ds in datasets):
-        raise RuntimeError("raster not accessible")
+        raise RuntimeError("satellite images could not be opened")
     _read_text(paths["mtl"])  # fail here rather than halfway through the blocks
     return paths, datasets
 
@@ -226,14 +227,14 @@ def resolve_source(preferred, item, local_dir, cookie):
             return source, paths, datasets, attempts
         except Exception as exc:
             attempts.append("{}: {}".format(SOURCE_LABELS.get(source, source), exc))
-    raise RuntimeError("No data source worked. " + " | ".join(attempts))
+    raise RuntimeError("Could not get the satellite images. " + " | ".join(attempts))
 
 
 def _read_text(path):
     if path.startswith("/vsi"):
         handle = gdal.VSIFOpenL(path, "rb")
         if handle is None:
-            raise RuntimeError("cannot open " + path)
+            raise RuntimeError("could not read " + os.path.basename(path))
         gdal.VSIFSeekL(handle, 0, 2)
         size = gdal.VSIFTellL(handle)
         gdal.VSIFSeekL(handle, 0, 0)
@@ -325,7 +326,8 @@ def _window(dataset, bbox):
     width = min(width, dataset.RasterXSize - off_x)
     height = min(height, dataset.RasterYSize - off_y)
     if width <= 0 or height <= 0:
-        raise RuntimeError("Requested area is outside the Landsat scene")
+        raise RuntimeError("Your area is outside the available satellite image. "
+                           "Try a smaller radius or another date.")
     out_gt = (gt[0] + off_x * gt[1], gt[1], gt[2],
               gt[3] + off_y * gt[5], gt[4], gt[5])
     return off_x, off_y, width, height, out_gt, dataset.GetProjectionRef()
@@ -409,7 +411,7 @@ def compute(params, progress=None, cancel=None):
                 maximum = max(maximum, float(values.max()))
             step(12 + int(72 * (y + rows) / height), "Processing row {}/{}".format(y + rows, height))
         if not count:
-            raise RuntimeError("No valid clear-sky pixels in the requested area")
+            raise RuntimeError("The image is too cloudy to get a result. Try another date.")
         mean = total / count
         spread = math.sqrt(max(0.0, total_sq / count - mean * mean))
         if spread < 0.1:

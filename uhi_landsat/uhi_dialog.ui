@@ -32,18 +32,18 @@
      <layout class="QFormLayout" name="formLayout_2">
       <item row="0" column="0"><widget class="QLabel" name="labelOutput"><property name="text"><string>Output folder</string></property></widget></item>
       <item row="0" column="1"><layout class="QHBoxLayout" name="hLayout"><item><widget class="QLineEdit" name="leOutputDir"/></item><item><widget class="QToolButton" name="tbOutputDir"><property name="text"><string>...</string></property></widget></item></layout></item>
-      <item row="1" column="0"><widget class="QLabel" name="labelLocal"><property name="text"><string>Local B10/B11 folder (optional)</string></property></widget></item>
-      <item row="1" column="1"><layout class="QHBoxLayout" name="hLayout_2"><item><widget class="QLineEdit" name="leLocalDir"><property name="placeholderText"><string>Used first when set</string></property></widget></item><item><widget class="QToolButton" name="tbLocalDir"><property name="text"><string>...</string></property></widget></item></layout></item>
-      <item row="2" column="0"><widget class="QLabel" name="labelSource"><property name="text"><string>Data source</string></property></widget></item>
-      <item row="2" column="1"><widget class="QComboBox" name="cmbSource"><item><property name="text"><string>Auto (try all sources)</string></property></item><item><property name="text"><string>Local folder</string></property></item><item><property name="text"><string>AWS S3 (requester-pays)</string></property></item><item><property name="text"><string>USGS HTTPS (login cookie)</string></property></item></widget></item>
-      <item row="3" column="0"><widget class="QLabel" name="labelCookie"><property name="text"><string>USGS cookie (optional)</string></property></widget></item>
-      <item row="3" column="1"><widget class="QLineEdit" name="leCookie"><property name="placeholderText"><string>Only needed for USGS HTTPS downloads</string></property><property name="echoMode"><enum>QLineEdit::Password</enum></property></widget></item>
+      <item row="1" column="0"><widget class="QLabel" name="labelLocal"><property name="text"><string>Folder with satellite files (optional)</string></property></widget></item>
+      <item row="1" column="1"><layout class="QHBoxLayout" name="hLayout_2"><item><widget class="QLineEdit" name="leLocalDir"><property name="placeholderText"><string>Only if you already downloaded the files</string></property></widget></item><item><widget class="QToolButton" name="tbLocalDir"><property name="text"><string>...</string></property></widget></item></layout></item>
+      <item row="2" column="0"><widget class="QLabel" name="labelSource"><property name="text"><string>Where to get the data</string></property></widget></item>
+      <item row="2" column="1"><widget class="QComboBox" name="cmbSource"><item><property name="text"><string>Automatic - try all options</string></property></item><item><property name="text"><string>Folder on my computer</string></property></item><item><property name="text"><string>AWS account (small download fee)</string></property></item><item><property name="text"><string>USGS website login</string></property></item></widget></item>
+      <item row="3" column="0"><widget class="QLabel" name="labelCookie"><property name="text"><string>USGS login cookie (optional)</string></property></widget></item>
+      <item row="3" column="1"><widget class="QLineEdit" name="leCookie"><property name="placeholderText"><string>Only needed if you pick USGS website login</string></property><property name="echoMode"><enum>QLineEdit::Password</enum></property></widget></item>
      </layout>
     </widget>
    </item>
    <item>
     <widget class="QLabel" name="labelHelp">
-     <property name="text"><string>Fetches the least-cloudy Landsat 8/9 scene within +/-7 days. Sources are tried in order: local folder, AWS S3 (needs credentials), USGS HTTPS (needs login cookie). Processing runs in blocks and does not freeze QGIS.</string></property>
+     <property name="text"><string>Pick a date and an area. The plugin finds the clearest nearby satellite image and adds two map layers for you. Choose a folder if you already have the files; otherwise leave it on Automatic and use an AWS account or your USGS login. QGIS stays usable while it works.</string></property>
      <property name="wordWrap"><bool>true</bool></property>
     </widget>
    </item>

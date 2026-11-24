@@ -1,6 +1,15 @@
 # Changelog
 
-All notable changes to this plugin are documented here.
+All notable changes to this project are documented here.
+
+## [1.1.0] - 2026-11-24
+
+### Added
+- Standalone desktop app (`desktop_app/`) with the same workflow and the same
+  shared engine as the QGIS plugin, using a background thread so it never freezes.
+- Downloadable desktop zip containing the app and the shared engine.
+- Plain-language descriptions in the README, plugin metadata, repository listing
+  and the dialogs, so GIS analysts can use it without processing satellite data manually.
 
 ## [1.0.0] - 2026-11-24
 

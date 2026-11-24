@@ -1,11 +1,11 @@
 [general]
 name=Urban Heat Island (Landsat 10/11)
-description=Map urban heat islands from Landsat 8/9 thermal bands 10 and 11
-version=1.0.0
+description=Turn a place, date and radius into easy-to-read temperature and heat-zone maps
+version=1.1.0
 qgisMinimumVersion=3.22
 author=Krishna Dutt Panchagnula
 email=krishnadutt123@gmail.com
-about=Enter a date, location name, latitude/longitude and radius. The plugin finds the least-cloudy Landsat 8/9 scene within +/-7 days (USGS LandsatLook or Element84 Earth Search STAC), reads bands 10 and 11 from the first working source (local folder, AWS S3 requester-pays, or USGS HTTPS with a session cookie), computes land surface temperature with a split-window algorithm in memory-bounded blocks, and adds styled LST (°C) and UHI class layers without freezing QGIS. Output GeoTIFFs carry full provenance. See the README for data-access requirements.
+about=Just enter a date, a place name, the latitude and longitude of the centre of your area, and a radius. The plugin finds the clearest nearby Landsat satellite image and adds two ready-to-use layers to QGIS: a ground temperature map in degrees Celsius, and a simple five-zone map showing which parts of the area are cool, average, warm or hot spots. Clouds and water are left out automatically. If you have the satellite files in a folder, point the plugin to it; otherwise let it download them using your AWS account or USGS login. The plugin works in the background without freezing QGIS, and the maps are saved as GeoTIFF files in the output folder you choose. The README has step-by-step instructions written for GIS analysts.
 tracker=https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island/issues
 repository=https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island
 homepage=https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island

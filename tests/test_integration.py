@@ -151,7 +151,7 @@ def test_source_fallback():
     finally:
         core.open_source = original
     assert source == "usgs_https"  # the source whose attempt succeeded
-    assert any("AWS S3" in a for a in attempts), attempts
+    assert any("AWS account" in a for a in attempts), attempts
     assert paths["b10"].endswith("TEST_B10.TIF")
     for ds in datasets:
         ds = None
