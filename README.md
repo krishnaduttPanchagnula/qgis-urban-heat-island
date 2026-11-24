@@ -1,5 +1,7 @@
 # Urban Heat Island QGIS plugin (Landsat 10/11)
 
+![Urban Heat Island plugin icon](uhi_landsat/icon.svg)
+
 A QGIS 3 plugin: give it a date, location name, latitude/longitude and a radius (km).
 It finds the least-cloudy Landsat 8/9 scene within ±7 days, reads thermal bands
 10 and 11, computes land surface temperature (LST), and adds two styled layers:
