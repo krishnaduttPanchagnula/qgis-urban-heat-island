@@ -83,7 +83,13 @@ def _read_text(path, cookie=""):
         with open(path, encoding="utf-8") as handle:
             return handle.read()
     with urlopen(Request(url, headers=headers), timeout=45) as response:
-        return response.read().decode("utf-8", "replace")
+        text = response.read().decode("utf-8", "replace")
+    # LandsatLook redirects unauthenticated downloads to the EROS login page,
+    # which would otherwise surface as a confusing JSON parse error.
+    if "<!DOCTYPE html" in text[:200] or "EROS Registration System" in text:
+        raise RuntimeError("USGS requires a login for downloads. Add your USGS cookie "
+                           "in the form, use an AWS account, or pick a local folder.")
+    return text
 
 
 def load_calibration(mtl_path, cookie=""):
