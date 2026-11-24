@@ -125,3 +125,8 @@ For absolute LST, use USGS Collection 2 Level-2 ST_B10.`
 - `python3 tests/test_core.py` — pure logic, no QGIS needed.
 - `python3 tests/test_integration.py` — end-to-end with real GDAL bindings.
 - `python3 tests/test_desktop.py` — desktop app worker with real GDAL bindings.
+
+## Publishing
+
+Maintainers: see [PUBLISHING.md](PUBLISHING.md) for PyPI trusted publishing and
+manual `twine` upload instructions.

@@ -3,14 +3,13 @@ Name: uhi-desktop
 Version: 1.1.0
 Summary: Standalone desktop app that maps urban heat islands from Landsat 10/11
 Author: Krishna Dutt Panchagnula
-License: MIT
+License-Expression: MIT
 Project-URL: Homepage, https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island
 Project-URL: Source, https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island
 Project-URL: Issues, https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island/issues
 Project-URL: Downloads, https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island/releases
 Keywords: qgis,landsat,urban heat island,land surface temperature,gis,raster
 Classifier: Programming Language :: Python :: 3
-Classifier: License :: OSI Approved :: MIT License
 Classifier: Topic :: Scientific/Engineering :: GIS
 Requires-Python: >=3.9
 Description-Content-Type: text/markdown

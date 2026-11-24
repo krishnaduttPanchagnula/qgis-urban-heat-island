@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,12 +8,12 @@ version = "1.1.0"
 description = "Standalone desktop app that maps urban heat islands from Landsat 10/11"
 readme = "README.md"
 requires-python = ">=3.9"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "Krishna Dutt Panchagnula" }]
 keywords = ["qgis", "landsat", "urban heat island", "land surface temperature", "gis", "raster"]
 classifiers = [
   "Programming Language :: Python :: 3",
-  "License :: OSI Approved :: MIT License",
   "Topic :: Scientific/Engineering :: GIS",
 ]
 dependencies = ["numpy>=1.21"]
