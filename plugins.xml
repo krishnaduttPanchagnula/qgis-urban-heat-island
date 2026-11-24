@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugins>
+  <pyqgis_plugin name="Urban Heat Island (Landsat 10/11)" version="1.0.0">
+    <description>Map urban heat islands from Landsat 8/9 thermal bands 10 and 11</description>
+    <about>Enter a date, location name, latitude/longitude and radius. The plugin finds the least-cloudy Landsat 8/9 scene within +/-7 days, reads bands 10 and 11 from the first working source (local folder, AWS S3, or USGS HTTPS), computes land surface temperature with a split-window algorithm in memory-bounded blocks, and adds styled LST and UHI class layers without freezing QGIS. See the README for data-access requirements.</about>
+    <version>1.0.0</version>
+    <qgis_minimum_version>3.22</qgis_minimum_version>
+    <qgis_maximum_version></qgis_maximum_version>
+    <homepage>https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island</homepage>
+    <file_name>uhi_landsat_plugin_v1.0.0.zip</file_name>
+    <icon>https://raw.githubusercontent.com/krishnaduttPanchagnula/qgis-urban-heat-island/main/uhi_landsat/icon.svg</icon>
+    <download_link>https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island/releases/download/v1.0.0/uhi_landsat_plugin_v1.0.0.zip</download_link>
+    <author_name>Krishna Dutt Panchagnula</author_name>
+    <license>MIT</license>
+    <update_date>2026-11-24</update_date>
+    <experimental>False</experimental>
+    <deprecated>False</deprecated>
+    <tracker>https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island/issues</tracker>
+    <repository>https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island</repository>
+    <tags>landsat,urban heat island,lst,land surface temperature,temperature,thermal,raster,remote sensing,heat</tags>
+    <category>Raster</category>
+  </pyqgis_plugin>
+</plugins>
