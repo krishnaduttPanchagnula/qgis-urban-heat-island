@@ -91,6 +91,20 @@ acquisition time, band paths, retrieval time, license and algorithm coefficients
 - Google's public Landsat bucket was checked but only holds ~2015 data, so it is
   not offered as a source.
 
+## Repository branding
+
+The repo About has a description, homepage pointing to the latest release, and topics
+(`qgis`, `qgis-plugin`, `landsat`, `urban-heat-island`, `land-surface-temperature`,
+`remote-sensing`, `thermal-imaging`, `geospatial`, `gis`, `python`, `raster`,
+`heat-island`, `stac`, `open-data`).
+
+The plugin/app icon is `uhi_landsat/icon.svg` — it appears in QGIS's plugin manager
+and toolbar and in the custom-repository listing. `social-preview.svg` and its
+rendered `social-preview.png` provide the repo social-preview image. GitHub does not
+expose an API for that image, so upload `social-preview.png` once under
+*Settings → General → Social preview*.
+
 ## Test
 
 `python3 tests/test_core.py` — checks the pure logic without QGIS installed.
+`python3 tests/test_integration.py` — end-to-end test with real GDAL bindings.

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640">
+  <defs>
+    <linearGradient id="thermal" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#3b82b8"/>
+      <stop offset="0.45" stop-color="#e8c55a"/>
+      <stop offset="1" stop-color="#d73027"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="640" fill="#111827"/>
+  <g transform="translate(96,80) scale(7.5)">
+    <rect x="2" y="2" width="60" height="60" rx="10" fill="#1b2436"/>
+    <rect x="6" y="6" width="52" height="52" rx="7" fill="url(#thermal)"/>
+    <circle cx="46" cy="19" r="8" fill="#ffd166"/>
+    <g stroke="#ffe0a3" stroke-width="2" fill="none" stroke-linecap="round">
+      <path d="M11 17 q4 -4 8 0 t8 0"/>
+      <path d="M15 11 q4 -4 8 0 t8 0"/>
+    </g>
+    <path d="M7 51 L7 36 L17 36 L17 29 L26 29 L26 41 L34 41 L34 23 L43 23 L43 35 L56 35 L56 51 Z" fill="#1b2436"/>
+    <rect x="6" y="51" width="52" height="7" rx="3" fill="#8b1a1a"/>
+  </g>
+  <text x="600" y="270" fill="#ffffff" font-family="DejaVu Sans, sans-serif" font-size="56" font-weight="bold">Urban Heat Island</text>
+  <text x="600" y="350" fill="#e8c55a" font-family="DejaVu Sans, sans-serif" font-size="34">Landsat 10/11 · QGIS plugin</text>
+  <text x="600" y="420" fill="#9ca3af" font-family="DejaVu Sans, sans-serif" font-size="24">Split-window LST · UHI classes · STAC</text>
+</svg>
