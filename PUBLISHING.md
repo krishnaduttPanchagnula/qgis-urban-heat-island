@@ -39,16 +39,20 @@ You should see two files in `dist/` and `PASSED` for both.
    - **PyPI Project Name:** `uhi-desktop`
    - **Owner:** `krishnaduttPanchagnula`
    - **Repository name:** `qgis-urban-heat-island`
-   - **Workflow name:** `workflow.yml`
-   - **Environment name:** `pypi`
+   - **Workflow name:** `publish.yml`
+   - **Environment name:** leave empty (`(Any)`) — this matches the workflow,
+     which does not declare a GitHub environment
 
-The workflow file (`.github/workflows/workflow.yml`) is already in the repo.
+The workflow file (`.github/workflows/publish.yml`) is already in the repo and
+matches the pending publisher currently configured on PyPI.
 
 ### 2. Configure GitHub
 
-1. Repo **Settings → Environments → New environment**, name it exactly `pypi`.
-   Optionally add required reviewers so publishing needs your approval.
-2. Push a commit containing the workflow (already done on `main`).
+No extra setup is required: the workflow is committed on `main`. A `pypi`
+environment exists in the repo but is intentionally not used by the workflow,
+so the OIDC token has no environment claim (matching `(Any)` on PyPI). If you
+later want an approval gate, add `environment: pypi` to the publish job on
+GitHub and set the PyPI publisher's environment name to `pypi` as well.
 
 ### 3. Publish
 
