@@ -1,7 +1,7 @@
 """Standalone desktop app for the urban heat island workflow.
 
-Uses the exact same uhi_core engine as the QGIS plugin, so results match.
-Only requirements: Python 3, numpy and GDAL Python bindings.
+Uses rasterio (whose wheels bundle GDAL) so a plain `pip install uhi-desktop`
+needs no system libraries. The maths is shared with the QGIS plugin.
 """
 
 import os
@@ -9,16 +9,21 @@ import queue
 import subprocess
 import sys
 import threading
-import tkinter as tk
 from datetime import date, datetime, timedelta
-from tkinter import filedialog, messagebox, ttk
+
+from PySide6.QtCore import QTimer
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import (
+    QApplication, QComboBox, QFileDialog, QFormLayout, QHBoxLayout, QLabel,
+    QLineEdit, QMessageBox, QPlainTextEdit, QProgressBar, QPushButton,
+    QVBoxLayout, QWidget,
+)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 try:  # pip-installed package
-    from uhi_landsat import uhi_core as core  # noqa: E402
+    from desktop_app import uhi_pip_core as core
 except ImportError:  # running straight from a source checkout
-    sys.path.insert(0, os.path.join(HERE, "..", "uhi_landsat"))
-    import uhi_core as core  # noqa: E402
+    import uhi_pip_core as core
 
 SOURCES = [
     ("Automatic - try all options", "auto"),
@@ -31,143 +36,132 @@ SOURCES = [
 class App:
     def __init__(self, root):
         self.root = root
-        root.title("Urban Heat Island - Landsat 10/11")
-        root.resizable(False, False)
-        icon_path = os.path.join(HERE, "icon.png")
-        if os.path.exists(icon_path):
-            self.icon = tk.PhotoImage(file=icon_path)
-            root.iconphoto(True, self.icon)
+        root.setWindowTitle("Urban Heat Island - Landsat 10/11")
+        root.setFixedSize(560, 640)
+        if os.path.exists(os.path.join(HERE, "icon.png")):
+            root.setWindowIcon(QIcon(os.path.join(HERE, "icon.png")))
 
         self.queue = queue.Queue()
         self.worker = None
         self.cancel_event = threading.Event()
         self.last_output_dir = None
 
-        main = ttk.Frame(root, padding=14)
-        main.grid(row=0, column=0, sticky="nsew")
+        layout = QVBoxLayout(root)
+        title = QLabel("Make an urban heat island map from a satellite image")
+        title.setStyleSheet("font-size: 13px; font-weight: bold;")
+        layout.addWidget(title)
 
-        ttk.Label(main, text="Make an urban heat island map from a satellite image",
-                  font=("DejaVu Sans", 12, "bold")).grid(row=0, column=0, columnspan=3,
-                                                         sticky="w", pady=(0, 10))
+        form = QFormLayout()
+        self.date_var = self._line(form, "Date (YYYY-MM-DD)",
+                                   (date.today() - timedelta(days=30)).isoformat())
+        self.place_var = self._line(form, "Location name", "Milan")
+        self.lat_var = self._line(form, "Latitude of centre", "45.4642")
+        self.lon_var = self._line(form, "Longitude of centre", "9.1900")
+        self.radius_var = self._line(form, "Radius in km", "20")
+        self.output_var = self._line(form, "Save maps in",
+                                     os.path.expanduser("~/uhi_output"), browse="folder")
+        self.local_var = self._line(form, "Folder with satellite files (optional)", "",
+                                    browse="folder")
+        self.source_combo = QComboBox()
+        self.source_combo.addItems([label for label, _ in SOURCES])
+        form.addRow("Where to get the data", self.source_combo)
+        self.cookie_var = self._line(form, "USGS login cookie (optional)", "",
+                                     password=True)
+        layout.addLayout(form)
 
-        row = 1
-        self.date_var = tk.StringVar(value=(date.today() - timedelta(days=30)).isoformat())
-        row = self._entry(main, row, "Date (YYYY-MM-DD)", self.date_var)
+        buttons = QHBoxLayout()
+        self.run_button = QPushButton("Make the maps")
+        self.run_button.clicked.connect(self.start)
+        self.cancel_button = QPushButton("Cancel")
+        self.cancel_button.clicked.connect(self.cancel)
+        self.cancel_button.setEnabled(False)
+        self.open_button = QPushButton("Open output folder")
+        self.open_button.clicked.connect(self.open_output)
+        self.open_button.setEnabled(False)
+        for button in (self.run_button, self.cancel_button, self.open_button):
+            buttons.addWidget(button)
+        layout.addLayout(buttons)
 
-        self.place_var = tk.StringVar(value="Milan")
-        row = self._entry(main, row, "Location name", self.place_var)
+        self.progress = QProgressBar()
+        self.progress.setRange(0, 100)
+        layout.addWidget(self.progress)
 
-        self.lat_var = tk.StringVar(value="45.4642")
-        row = self._entry(main, row, "Latitude of centre", self.lat_var)
+        self.status = QLabel("Fill in the form and click 'Make the maps'.")
+        self.status.setWordWrap(True)
+        layout.addWidget(self.status)
 
-        self.lon_var = tk.StringVar(value="9.1900")
-        row = self._entry(main, row, "Longitude of centre", self.lon_var)
+        self.result = QPlainTextEdit()
+        self.result.setReadOnly(True)
+        layout.addWidget(self.result)
 
-        self.radius_var = tk.StringVar(value="20")
-        row = self._entry(main, row, "Radius in km", self.radius_var)
+        note = QLabel("Blank areas on the maps are cloud or water.")
+        note.setStyleSheet("color: #666;")
+        layout.addWidget(note)
 
-        self.output_var = tk.StringVar(value=os.path.expanduser("~/uhi_output"))
-        row = self._entry(main, row, "Save maps in", self.output_var, browse="folder")
-
-        self.local_var = tk.StringVar()
-        row = self._entry(main, row, "Folder with satellite files (optional)",
-                          self.local_var, browse="folder")
-
-        ttk.Label(main, text="Where to get the data").grid(row=row, column=0, sticky="w", pady=4)
-        self.source_combo = ttk.Combobox(main, state="readonly",
-                                         values=[label for label, _ in SOURCES], width=34)
-        self.source_combo.current(0)
-        self.source_combo.grid(row=row, column=1, columnspan=2, sticky="w", pady=4)
-        row += 1
-
-        self.cookie_var = tk.StringVar()
-        self._entry(main, row, "USGS login cookie (optional)", self.cookie_var, show="*")
-        row += 1
-
-        buttons = ttk.Frame(main)
-        buttons.grid(row=row, column=0, columnspan=3, pady=(12, 6), sticky="w")
-        self.run_button = ttk.Button(buttons, text="Make the maps", command=self.start)
-        self.run_button.pack(side="left")
-        self.cancel_button = ttk.Button(buttons, text="Cancel", command=self.cancel,
-                                        state="disabled")
-        self.cancel_button.pack(side="left", padx=6)
-        self.open_button = ttk.Button(buttons, text="Open output folder",
-                                      command=self.open_output, state="disabled")
-        self.open_button.pack(side="left")
-        row += 1
-
-        self.progress = ttk.Progressbar(main, mode="determinate", length=410)
-        self.progress.grid(row=row, column=0, columnspan=3, sticky="w", pady=(4, 4))
-        row += 1
-
-        self.status = tk.StringVar(value="Fill in the form and click 'Make the maps'.")
-        ttk.Label(main, textvariable=self.status, foreground="#333333",
-                  wraplength=430, justify="left").grid(row=row, column=0, columnspan=3,
-                                                       sticky="w", pady=(0, 8))
-        row += 1
-
-        self.result = tk.Text(main, height=6, width=62, state="disabled")
-        self.result.grid(row=row, column=0, columnspan=3, sticky="w")
-        row += 1
-        ttk.Label(main, text="Blank areas on the maps are cloud or water.",
-                  foreground="#666666").grid(row=row, column=0, columnspan=3, sticky="w",
-                                             pady=(6, 0))
-
-    def _entry(self, parent, row, label, variable, browse=None, show=None):
-        ttk.Label(parent, text=label).grid(row=row, column=0, sticky="w", pady=4)
-        entry = ttk.Entry(parent, textvariable=variable, width=42, show=show)
-        entry.grid(row=row, column=1, columnspan=2, sticky="w", pady=4)
+    def _line(self, form, label, value, browse=None, password=False):
         if browse:
-            ttk.Button(parent, text="...", width=3,
-                       command=lambda: self._pick(variable)).grid(row=row, column=3, padx=(4, 0))
-        return row + 1
+            row = QWidget()
+            fields = QHBoxLayout(row)
+            field = QLineEdit(value)
+            button = QPushButton("...")
+            button.setFixedWidth(32)
+            button.clicked.connect(lambda: self._pick(field))
+            fields.addWidget(field)
+            fields.addWidget(button)
+            fields.setContentsMargins(0, 0, 0, 0)
+            form.addRow(label, row)
+        else:
+            field = QLineEdit(value)
+            if password:
+                field.setEchoMode(QLineEdit.EchoMode.Password)
+            form.addRow(label, field)
+        return field
 
-    def _pick(self, variable):
-        chosen = filedialog.askdirectory(initialdir=variable.get() or os.path.expanduser("~"))
+    def _pick(self, field):
+        chosen = QFileDialog.getExistingDirectory(
+            self.root, "Choose a folder", field.text() or os.path.expanduser("~"))
         if chosen:
-            variable.set(chosen)
+            field.setText(chosen)
 
     def _params(self):
         try:
-            day = datetime.strptime(self.date_var.get().strip(), "%Y-%m-%d").date()
-            lat = float(self.lat_var.get())
-            lon = float(self.lon_var.get())
-            radius = float(self.radius_var.get())
+            day = datetime.strptime(self.date_var.text().strip(), "%Y-%m-%d").date()
+            lat = float(self.lat_var.text())
+            lon = float(self.lon_var.text())
+            radius = float(self.radius_var.text())
         except ValueError:
             raise ValueError("Check the date (YYYY-MM-DD) and the latitude, longitude "
                              "and radius numbers.")
         if radius <= 0:
             raise ValueError("Radius must be greater than zero.")
-        label = SOURCES[self.source_combo.current()][1]
+        label = SOURCES[self.source_combo.currentIndex()][1]
         return {
             "day": day.isoformat(),
-            "location": self.place_var.get().strip() or "area",
+            "location": self.place_var.text().strip() or "area",
             "lat": lat, "lon": lon, "radius_km": radius,
-            "output_dir": self.output_var.get().strip() or os.path.expanduser("~/uhi_output"),
-            "local_dir": self.local_var.get().strip(),
+            "output_dir": self.output_var.text().strip() or os.path.expanduser("~/uhi_output"),
+            "local_dir": self.local_var.text().strip(),
             "source": label,
-            "cookie": self.cookie_var.get().strip(),
+            "cookie": self.cookie_var.text().strip(),
         }
 
     def start(self):
         try:
             params = self._params()
         except ValueError as exc:
-            messagebox.showerror("Check your entries", str(exc))
+            QMessageBox.critical(self.root, "Check your entries", str(exc))
             return
         self.cancel_event.clear()
         self.queue = queue.Queue()
-        self.progress["value"] = 0
-        self.status.set("Looking for a satellite image...")
-        self.result.configure(state="normal")
-        self.result.delete("1.0", "end")
-        self.result.configure(state="disabled")
-        self.run_button.configure(state="disabled")
-        self.cancel_button.configure(state="normal")
-        self.open_button.configure(state="disabled")
+        self.progress.setValue(0)
+        self.status.setText("Looking for a satellite image...")
+        self.result.clear()
+        self.run_button.setEnabled(False)
+        self.cancel_button.setEnabled(True)
+        self.open_button.setEnabled(False)
         self.worker = threading.Thread(target=self._work, args=(params,), daemon=True)
         self.worker.start()
-        self.root.after(100, self._poll)
+        QTimer.singleShot(100, self._poll)
 
     def _work(self, params):
         def progress(value, message):
@@ -188,43 +182,37 @@ class App:
                 break
             kind, payload = item[0], item[1]
             if kind == "progress":
-                self.progress["value"] = payload
-                self.status.set(item[2])
+                self.progress.setValue(payload)
+                self.status.setText(item[2])
             elif kind == "done":
                 stats = payload["stats"]
                 self.last_output_dir = os.path.dirname(payload["lst_path"])
-                self.progress["value"] = 100
-                self.status.set("Done. Maps saved in {}.".format(self.last_output_dir))
+                self.progress.setValue(100)
+                self.status.setText("Done. Maps saved in {}.".format(self.last_output_dir))
                 text = ("Data source: {}\nAverage temperature: {:.1f} °C\n"
                         "Temperature range: {:.1f} to {:.1f} °C\n"
                         "Clear-sky pixels: {}\n\nTemperature map: {}\nHeat-zone map: {}"
                         .format(payload["source"], stats["mean"], stats["min"],
                                 stats["max"], stats["valid_pixels"],
                                 payload["lst_path"], payload["uhi_path"]))
-                self._show_result(text)
-                self.open_button.configure(state="normal")
-                messagebox.showinfo("Finished", "Your two maps are ready.")
+                self.result.setPlainText(text)
+                self.open_button.setEnabled(True)
+                QMessageBox.information(self.root, "Finished", "Your two maps are ready.")
             elif kind == "error":
-                self.status.set("Could not finish: {}".format(payload))
-                messagebox.showerror("Something went wrong", payload)
+                self.status.setText("Could not finish: {}".format(payload))
+                QMessageBox.critical(self.root, "Something went wrong", payload)
             elif kind == "cancelled":
-                self.status.set("Cancelled.")
-                self.progress["value"] = 0
+                self.status.setText("Cancelled.")
+                self.progress.setValue(0)
         if self.worker and self.worker.is_alive():
-            self.root.after(100, self._poll)
+            QTimer.singleShot(100, self._poll)
         else:
-            self.run_button.configure(state="normal")
-            self.cancel_button.configure(state="disabled")
-
-    def _show_result(self, text):
-        self.result.configure(state="normal")
-        self.result.delete("1.0", "end")
-        self.result.insert("1.0", text)
-        self.result.configure(state="disabled")
+            self.run_button.setEnabled(True)
+            self.cancel_button.setEnabled(False)
 
     def cancel(self):
         self.cancel_event.set()
-        self.status.set("Stopping after the current step...")
+        self.status.setText("Stopping after the current step...")
 
     def open_output(self):
         path = self.last_output_dir
@@ -237,13 +225,15 @@ class App:
                 else:
                     subprocess.run(["xdg-open", path], check=False)
             except OSError:
-                messagebox.showinfo("Output folder", path)
+                QMessageBox.information(self.root, "Output folder", path)
 
 
 def main():
-    root = tk.Tk()
-    App(root)
-    root.mainloop()
+    app = QApplication(sys.argv)
+    window = QWidget()
+    App(window)
+    window.show()
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":

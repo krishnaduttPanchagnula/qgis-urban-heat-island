@@ -1,7 +1,7 @@
 [general]
 name=Urban Heat Island (Landsat 10/11)
 description=Turn a place, date and radius into easy-to-read temperature and heat-zone maps
-version=1.1.0
+version=1.2.0
 qgisMinimumVersion=3.22
 author=Krishna Dutt Panchagnula
 email=krishnadutt123@gmail.com

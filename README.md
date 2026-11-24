@@ -20,11 +20,14 @@ to your QGIS project:
 You do not need to know how to process satellite imagery. You just fill in a
 short form and the maps appear in your layer panel.
 
-**No QGIS?** There is also a standalone desktop app with exactly the same logic in
-[`desktop_app/`](desktop_app/README.md). Install it with
-`pip install git+https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island.git@v1.1.0`
-and launch it with `uhi-desktop`; the desktop README also covers conda, the release
-zip and running from source.
+**No QGIS?** There is also a standalone desktop app with the same maths in
+[`desktop_app/`](desktop_app/README.md). One command is enough — no Tk, GDAL or
+conda setup:
+
+```bash
+pip install uhi-desktop
+uhi-desktop
+```
 
 ## Install
 
@@ -123,8 +126,9 @@ For absolute LST, use USGS Collection 2 Level-2 ST_B10.`
 ## Tests
 
 - `python3 tests/test_core.py` — pure logic, no QGIS needed.
-- `python3 tests/test_integration.py` — end-to-end with real GDAL bindings.
-- `python3 tests/test_desktop.py` — desktop app worker with real GDAL bindings.
+- `python3 tests/test_integration.py` — end-to-end for the QGIS backend (needs GDAL).
+- `QT_QPA_PLATFORM=offscreen python3 tests/test_desktop.py` — desktop app worker
+  (only pip packages: PySide6, rasterio, numpy).
 
 ## Publishing
 

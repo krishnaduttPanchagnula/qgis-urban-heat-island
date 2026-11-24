@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented here.
 
+## [1.2.0] - 2026-11-24
+
+### Changed
+- Desktop app now uses PySide6 (Qt) instead of tkinter and rasterio instead of
+  system GDAL bindings. `pip install uhi-desktop` needs no system libraries.
+- Shared maths/discovery moved to `uhi_landsat/uhi_common.py`; the QGIS plugin
+  keeps its osgeo/GDAL backend, so QGIS users need no extra packages.
+
 ## [1.1.0] - 2026-11-24
 
 ### Added

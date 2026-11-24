@@ -21,9 +21,9 @@ python -m twine check dist/*
 
 You should see two files in `dist/` and `PASSED` for both.
 
-> Note: GDAL is intentionally **not** a PyPI dependency — there is no portable
-> wheel. Users install it with conda or their OS package manager (documented in
-> `desktop_app/README.md`). The wheel itself is pure Python and installs anywhere.
+> Note: `PySide6-Essentials` supplies the Qt GUI and `rasterio` wheels bundle GDAL,
+> so `pip install uhi-desktop` is enough on any OS — no Tk, conda or system libraries.
+> The wheel itself is pure Python and installs anywhere.
 
 ---
 
