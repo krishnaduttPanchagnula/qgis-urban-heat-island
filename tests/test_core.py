@@ -98,6 +98,35 @@ def test_new_scene_id_and_platform_case():
         uhi_common._get_json = original
 
 
+def test_list_available_dates():
+    import uhi_common
+
+    def fake_get_json(url):
+        if "landsatlook.usgs.gov" in url:
+            features = [
+                ("A", "LANDSAT_9", "landsat:cloud_cover_land", 20, "2026-10-24T10:00:00Z"),
+                ("B", "LANDSAT_9", "landsat:cloud_cover_land", 80, "2026-10-24T11:00:00Z"),
+                ("C", "LANDSAT_8", "landsat:cloud_cover_land", 10, "2026-10-20T10:00:00Z"),
+            ]
+        else:
+            features = [
+                ("D", "landsat-9", "eo:cloud_cover", 5, "2026-10-24T10:00:00Z"),
+            ]
+        return {"features": [{"id": i, "properties": {
+            "platform": p, field: cloud, "datetime": when}}
+            for i, p, field, cloud, when in features]}
+
+    original = uhi_common._get_json
+    uhi_common._get_json = fake_get_json
+    try:
+        dates = uhi_common.list_available_dates(
+            45.0, 9.0, 20, uhi_common._date("2026-10-25"))
+    finally:
+        uhi_common._get_json = original
+    assert [row[0] for row in dates] == ["2026-10-20", "2026-10-24"]
+    assert dates[1][1] == 5  # clearest scene across both catalogues
+
+
 if __name__ == "__main__":
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

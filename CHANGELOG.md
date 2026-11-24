@@ -4,6 +4,10 @@ All notable changes to this project are documented here.
 
 ## [1.2.1] - 2026-11-24
 
+### Added
+- "Dates with images" button and failure hints: list the nearest dates with
+  Landsat imagery within ±60 days, with cloud cover, and pick one to fill the form.
+
 ### Fixed
 - Scene search now accepts LandsatLook's uppercase platform values (`LANDSAT_9`)
   as well as Element84's lowercase ones, so scenes are found again.

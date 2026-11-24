@@ -19,15 +19,15 @@ try:  # packaged (QGIS plugin / pip wheel)
     from .uhi_common import (
         BLOCK_ROWS, CLASS_LABELS, S3_BUCKET, SOURCE_LABELS, SW_A, SW_B, SW_C, Cancelled,
         _date, _flatten, _synthesise_l1_item, bbox_from_point,
-        brightness_temperature, classify, class_edges, find_scene, source_order,
-        split_window,
+        brightness_temperature, classify, class_edges, find_scene,
+        list_available_dates, source_order, split_window,
     )
 except ImportError:  # flat import from a source checkout
     from uhi_common import (
         BLOCK_ROWS, CLASS_LABELS, S3_BUCKET, SOURCE_LABELS, SW_A, SW_B, SW_C, Cancelled,
         _date, _flatten, _synthesise_l1_item, bbox_from_point,
-        brightness_temperature, classify, class_edges, find_scene, source_order,
-        split_window,
+        brightness_temperature, classify, class_edges, find_scene,
+        list_available_dates, source_order, split_window,
     )
 
 

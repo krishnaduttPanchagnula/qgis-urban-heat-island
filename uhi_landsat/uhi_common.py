@@ -79,13 +79,14 @@ def _date(iso):
     return datetime.fromisoformat(iso.replace("Z", "+00:00")).date()
 
 
-def _query_catalog(url, collection, bbox, day, days, cloud_field):
+def _query_catalog(url, collection, bbox, day, days, cloud_field,
+                   limit=50, max_cloud=50):
     params = {
         "collections": collection,
         "bbox": ",".join(f"{v:.6f}" for v in bbox),
         "datetime": f"{day - timedelta(days=days)}T00:00:00Z/"
                     f"{day + timedelta(days=days)}T23:59:59Z",
-        "limit": "50",
+        "limit": str(limit),
     }
     features = _get_json(url + "?" + urlencode(params)).get("features", [])
     candidates = []
@@ -96,7 +97,7 @@ def _query_catalog(url, collection, bbox, day, days, cloud_field):
         if platform not in ("landsat-8", "landsat-9"):
             continue
         cloud = props.get(cloud_field, props.get("landsat:cloud_cover_land"))
-        if cloud is None or cloud > 50:
+        if cloud is None or (max_cloud is not None and cloud > max_cloud):
             continue
         acquired = _date(props["datetime"])
         candidates.append((abs((acquired - day).days), cloud, feature))
@@ -150,6 +151,31 @@ def find_scene(lat, lon, radius_km, day, days=7):
             failures.append("{}: {}".format(name, exc))
     raise RuntimeError("Could not find a suitable satellite image near the chosen date. "
                        + "; ".join(failures))
+
+
+def list_available_dates(lat, lon, radius_km, day, days=60):
+    """Dates with Landsat imagery near `day`: [(iso_date, cloud, scene_id, catalogue)].
+
+    One row per date, keeping the clearest scene. Cloudy dates are included so
+    users can see that data exists even if no scene passes the 50% cloud cut.
+    """
+    bbox = bbox_from_point(lat, lon, radius_km)
+    best = {}
+    for name, url in STAC_CATALOGS:
+        try:
+            collection = "landsat-c2l1" if "LandsatLook" in name else "landsat-c2-l2"
+            cloud_field = "landsat:cloud_cover_land" if "LandsatLook" in name else "eo:cloud_cover"
+            candidates = _query_catalog(url, collection, bbox, day, days, cloud_field,
+                                        limit=100, max_cloud=None)
+        except Exception:
+            continue
+        for _, cloud, feature in candidates:
+            if cloud is None or cloud < 0:  # unknown cloud cover
+                continue
+            acquired = _date(feature["properties"]["datetime"]).isoformat()
+            if acquired not in best or cloud < best[acquired][0]:
+                best[acquired] = (cloud, feature["id"], name)
+    return [(date, best[date][0], best[date][1], best[date][2]) for date in sorted(best)]
 
 
 def brightness_temperature(dn, cal):

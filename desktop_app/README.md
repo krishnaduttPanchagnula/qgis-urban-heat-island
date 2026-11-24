@@ -19,6 +19,10 @@ two GeoTIFF maps in your chosen folder:
 Clouds and water are left out automatically. A progress bar keeps you informed and
 **Cancel** stops the work.
 
+Not sure which date has an image? Click **Dates with images** to list the nearest
+dates within ±60 days with their cloud cover, then double-click one to use it. If a
+search finds nothing, the error message includes that date list automatically.
+
 ## Requirements
 
 Just Python 3.10 or newer. `pip` installs everything else:

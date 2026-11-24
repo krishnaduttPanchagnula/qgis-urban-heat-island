@@ -14,9 +14,9 @@ from datetime import date, datetime, timedelta
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
-    QApplication, QComboBox, QFileDialog, QFormLayout, QHBoxLayout, QLabel,
-    QLineEdit, QMessageBox, QPlainTextEdit, QProgressBar, QPushButton,
-    QVBoxLayout, QWidget,
+    QApplication, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout,
+    QHBoxLayout, QLabel, QLineEdit, QListWidget, QMessageBox, QPlainTextEdit,
+    QProgressBar, QPushButton, QVBoxLayout, QWidget,
 )
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -78,7 +78,11 @@ class App:
         self.open_button = QPushButton("Open output folder")
         self.open_button.clicked.connect(self.open_output)
         self.open_button.setEnabled(False)
-        for button in (self.run_button, self.cancel_button, self.open_button):
+        self.dates_button = QPushButton("Dates with images")
+        self.dates_button.setToolTip("List dates with satellite images within 60 days")
+        self.dates_button.clicked.connect(self.list_dates)
+        for button in (self.run_button, self.cancel_button, self.open_button,
+                       self.dates_button):
             buttons.addWidget(button)
         layout.addLayout(buttons)
 
@@ -163,6 +167,54 @@ class App:
         self.worker.start()
         QTimer.singleShot(100, self._poll)
 
+    def list_dates(self):
+        try:
+            params = self._params()
+        except ValueError as exc:
+            QMessageBox.critical(self.root, "Check your entries", str(exc))
+            return
+        self.worker = threading.Thread(target=self._dates_worker,
+                                       args=(params,), daemon=True)
+        self.worker.start()
+        self.status.setText("Looking for dates with images...")
+        QTimer.singleShot(100, self._poll)
+
+    def _dates_worker(self, params):
+        try:
+            self.queue.put(("dates", core.list_dates(params)))
+        except Exception as exc:
+            self.queue.put(("error", "{}: {}".format(type(exc).__name__, exc)))
+
+    def _show_dates(self, dates):
+        if not dates:
+            QMessageBox.information(self.root, "Dates with images",
+                                    "No Landsat images found within 60 days.")
+            return
+        dialog = QDialog(self.root)
+        dialog.setWindowTitle("Dates with images (within 60 days)")
+        layout = QVBoxLayout(dialog)
+        layout.addWidget(QLabel("Pick a date to use it in the form:"))
+        listing = QListWidget()
+        for iso, cloud, scene, catalog in dates:
+            listing.addItem("{}  —  {:.0f}% cloud  —  {}  ({})".format(
+                iso, cloud, scene, catalog))
+        layout.addWidget(listing)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok
+                                   | QDialogButtonBox.StandardButton.Cancel)
+        buttons.accepted.connect(dialog.accept)
+        buttons.rejected.connect(dialog.reject)
+        layout.addWidget(buttons)
+
+        def choose(item=None):
+            row = listing.currentRow()
+            if row >= 0:
+                self.date_var.setText(dates[row][0])
+            dialog.accept()
+
+        listing.itemDoubleClicked.connect(choose)
+        buttons.button(QDialogButtonBox.StandardButton.Ok).clicked.connect(choose)
+        dialog.exec()
+
     def _work(self, params):
         def progress(value, message):
             self.queue.put(("progress", value, message))
@@ -172,7 +224,17 @@ class App:
         except core.Cancelled:
             self.queue.put(("cancelled", None))
         except Exception as exc:
-            self.queue.put(("error", "{}: {}".format(type(exc).__name__, exc)))
+            message = "{}: {}".format(type(exc).__name__, exc)
+            if "Could not find a suitable satellite image" in message:
+                try:
+                    dates = core.list_dates(params)
+                    if dates:
+                        message += ("\n\nDates with images within 60 days:\n"
+                                    + "\n".join("{} ({:.0f}% cloud)".format(d, c)
+                                                for d, c, _, _ in dates))
+                except Exception:
+                    pass
+            self.queue.put(("error", message))
 
     def _poll(self):
         while True:
@@ -201,6 +263,9 @@ class App:
             elif kind == "error":
                 self.status.setText("Could not finish: {}".format(payload))
                 QMessageBox.critical(self.root, "Something went wrong", payload)
+            elif kind == "dates":
+                self._show_dates(payload)
+                self.status.setText("Pick a date from the list, or keep the current one.")
             elif kind == "cancelled":
                 self.status.setText("Cancelled.")
                 self.progress.setValue(0)

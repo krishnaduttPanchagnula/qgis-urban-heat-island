@@ -21,13 +21,13 @@ try:  # pip-installed package
     from uhi_landsat.uhi_common import (
         BLOCK_ROWS, S3_BUCKET, SOURCE_LABELS, SW_A, SW_B, SW_C, Cancelled,
         _date, _flatten, bbox_from_point, brightness_temperature, classify,
-        find_scene, source_order, split_window,
+        find_scene, list_available_dates, source_order, split_window,
     )
 except ImportError:  # running straight from a source checkout
     from uhi_common import (
         BLOCK_ROWS, S3_BUCKET, SOURCE_LABELS, SW_A, SW_B, SW_C, Cancelled,
         _date, _flatten, bbox_from_point, brightness_temperature, classify,
-        find_scene, source_order, split_window,
+        find_scene, list_available_dates, source_order, split_window,
     )
 
 
@@ -139,6 +139,12 @@ def _window(dataset, bbox):
                            "Try a smaller radius or another date.")
     window = Window(off_x, off_y, width, height)
     return window, dataset.window_transform(window), dataset.crs.to_wkt()
+
+
+def list_dates(params):
+    """Nearby dates with imagery, for the GUI's date picker and failure hint."""
+    return list_available_dates(params["lat"], params["lon"], params["radius_km"],
+                                _date(params["day"]))
 
 
 def compute(params, progress=None, cancel=None):
