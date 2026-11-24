@@ -39,10 +39,10 @@ You should see two files in `dist/` and `PASSED` for both.
    - **PyPI Project Name:** `uhi-desktop`
    - **Owner:** `krishnaduttPanchagnula`
    - **Repository name:** `qgis-urban-heat-island`
-   - **Workflow name:** `publish.yml`
+   - **Workflow name:** `workflow.yml`
    - **Environment name:** `pypi`
 
-The workflow file (`.github/workflows/publish.yml`) is already in the repo.
+The workflow file (`.github/workflows/workflow.yml`) is already in the repo.
 
 ### 2. Configure GitHub
 
