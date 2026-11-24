@@ -1,0 +1,14 @@
+[general]
+name=Urban Heat Island (Landsat 10/11)
+description=Creates land surface temperature and urban heat island class layers from Landsat 8/9 thermal bands 10 and 11.
+version=1.0
+qgisMinimumVersion=3.22
+author=OpenCode
+email=
+about=Enter a date, location name, latitude/longitude and radius. The plugin finds the least-cloudy Landsat 8/9 scene (two STAC catalogues), retrieves bands 10 and 11 from the first working source (local folder, AWS S3 or USGS HTTPS), computes surface temperature with a split-window algorithm in memory-bounded blocks, and adds styled LST and UHI layers without freezing QGIS.
+tracker=https://github.com/
+repository=https://github.com/
+tags=landsat,thermal,urban heat island,lst,temperature,raster
+category=Raster
+experimental=True
+icon=

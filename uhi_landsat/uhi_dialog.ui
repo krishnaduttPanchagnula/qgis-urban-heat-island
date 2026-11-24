@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>UhiDialog</class>
+ <widget class="QDialog" name="UhiDialog">
+  <property name="geometry">
+   <rect><x>0</x><y>0</y><width>480</width><height>530</height></rect>
+  </property>
+  <property name="windowTitle">
+   <string>Urban Heat Island from Landsat 10/11</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title"><string>Area and date</string></property>
+     <layout class="QFormLayout" name="formLayout">
+      <item row="0" column="0"><widget class="QLabel" name="labelDate"><property name="text"><string>Date</string></property></widget></item>
+      <item row="0" column="1"><widget class="QDateEdit" name="dateEdit"><property name="calendarPopup"><bool>true</bool></property><property name="displayFormat"><string>yyyy-MM-dd</string></property></widget></item>
+      <item row="1" column="0"><widget class="QLabel" name="labelLocation"><property name="text"><string>Location name</string></property></widget></item>
+      <item row="1" column="1"><widget class="QLineEdit" name="leLocation"><property name="placeholderText"><string>e.g. Milan</string></property></widget></item>
+      <item row="2" column="0"><widget class="QLabel" name="labelLat"><property name="text"><string>Latitude</string></property></widget></item>
+      <item row="2" column="1"><widget class="QDoubleSpinBox" name="dsLat"><property name="decimals"><number>6</number></property><property name="minimum"><double>-90.000000</double></property><property name="maximum"><double>90.000000</double></property><property name="value"><double>45.464200</double></property></widget></item>
+      <item row="3" column="0"><widget class="QLabel" name="labelLon"><property name="text"><string>Longitude</string></property></widget></item>
+      <item row="3" column="1"><widget class="QDoubleSpinBox" name="dsLon"><property name="decimals"><number>6</number></property><property name="minimum"><double>-180.000000</double></property><property name="maximum"><double>180.000000</double></property><property name="value"><double>9.190000</double></property></widget></item>
+      <item row="4" column="0"><widget class="QLabel" name="labelRadius"><property name="text"><string>Radius (km)</string></property></widget></item>
+      <item row="4" column="1"><widget class="QDoubleSpinBox" name="dsRadius"><property name="decimals"><number>1</number></property><property name="minimum"><double>1.000000</double></property><property name="maximum"><double>200.000000</double></property><property name="value"><double>20.000000</double></property></widget></item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title"><string>Data and output</string></property>
+     <layout class="QFormLayout" name="formLayout_2">
+      <item row="0" column="0"><widget class="QLabel" name="labelOutput"><property name="text"><string>Output folder</string></property></widget></item>
+      <item row="0" column="1"><layout class="QHBoxLayout" name="hLayout"><item><widget class="QLineEdit" name="leOutputDir"/></item><item><widget class="QToolButton" name="tbOutputDir"><property name="text"><string>...</string></property></widget></item></layout></item>
+      <item row="1" column="0"><widget class="QLabel" name="labelLocal"><property name="text"><string>Local B10/B11 folder (optional)</string></property></widget></item>
+      <item row="1" column="1"><layout class="QHBoxLayout" name="hLayout_2"><item><widget class="QLineEdit" name="leLocalDir"><property name="placeholderText"><string>Used first when set</string></property></widget></item><item><widget class="QToolButton" name="tbLocalDir"><property name="text"><string>...</string></property></widget></item></layout></item>
+      <item row="2" column="0"><widget class="QLabel" name="labelSource"><property name="text"><string>Data source</string></property></widget></item>
+      <item row="2" column="1"><widget class="QComboBox" name="cmbSource"><item><property name="text"><string>Auto (try all sources)</string></property></item><item><property name="text"><string>Local folder</string></property></item><item><property name="text"><string>AWS S3 (requester-pays)</string></property></item><item><property name="text"><string>USGS HTTPS (login cookie)</string></property></item></widget></item>
+      <item row="3" column="0"><widget class="QLabel" name="labelCookie"><property name="text"><string>USGS cookie (optional)</string></property></widget></item>
+      <item row="3" column="1"><widget class="QLineEdit" name="leCookie"><property name="placeholderText"><string>Only needed for USGS HTTPS downloads</string></property><property name="echoMode"><enum>QLineEdit::Password</enum></property></widget></item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="labelHelp">
+     <property name="text"><string>Fetches the least-cloudy Landsat 8/9 scene within +/-7 days. Sources are tried in order: local folder, AWS S3 (needs credentials), USGS HTTPS (needs login cookie). Processing runs in blocks and does not freeze QGIS.</string></property>
+     <property name="wordWrap"><bool>true</bool></property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation"><enum>Qt::Horizontal</enum></property>
+     <property name="standardButtons"><set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set></property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection><sender>buttonBox</sender><signal>accepted()</signal><receiver>UhiDialog</receiver><slot>accept()</slot></connection>
+  <connection><sender>buttonBox</sender><signal>rejected()</signal><receiver>UhiDialog</receiver><slot>reject()</slot></connection>
+ </connections>
+</ui>
