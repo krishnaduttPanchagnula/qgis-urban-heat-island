@@ -23,6 +23,11 @@ Not sure which date has an image? Click **Dates with images** to list the neares
 dates within ±60 days with their cloud cover, then double-click one to use it. If a
 search finds nothing, the error message includes that date list automatically.
 
+When the maps are ready, **View maps** opens them in the app: switch between the
+temperature map and the five heat zones, zoom, and read the legend. Downloads from
+USGS now need a login cookie; add it in the form, use an AWS account, or point the
+app at a local folder of satellite files.
+
 ## Requirements
 
 Just Python 3.10 or newer. `pip` installs everything else:

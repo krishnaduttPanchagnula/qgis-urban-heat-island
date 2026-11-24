@@ -7,6 +7,12 @@ All notable changes to this project are documented here.
 ### Added
 - "Dates with images" button and failure hints: list the nearest dates with
   Landsat imagery within ±60 days, with cloud cover, and pick one to fill the form.
+- Built-in map viewer for the finished LST and UHI GeoTIFFs, with layer switching,
+  zoom, a temperature colour ramp and a heat-zone legend.
+
+### Fixed
+- USGS HTTPS downloads without a login cookie now fail with an actionable message
+  instead of an HTML parse error.
 
 ## [1.2.1] - 2026-11-24
 

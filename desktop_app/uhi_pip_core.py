@@ -48,7 +48,7 @@ def _s3_path(href):
     return href
 
 
-def source_paths(source, item, local_dir=None):
+def source_paths(source, item, local_dir=None, cookie=""):
     """Resolve one source into rasterio paths for B10, B11, QA and MTL.json."""
     assets = item["assets"]
     keys = {"b10": "lwir11", "b11": "lwir12", "qa": "qa_pixel", "mtl": "MTL.json"}
@@ -64,6 +64,12 @@ def source_paths(source, item, local_dir=None):
         elif source == "aws_s3":
             paths[name] = _s3_path(href)
         elif source == "usgs_https":
+            # Without a cookie LandsatLook redirects downloads to the EROS login
+            # page; GDAL then fails on the HTML with a cryptic parse error.
+            if not cookie:
+                raise RuntimeError(
+                    "USGS now requires a login cookie for downloads. Add it in "
+                    "the form, use an AWS account, or pick a local folder.")
             paths[name] = href
         else:
             raise RuntimeError("Unknown source {}".format(source))
@@ -115,7 +121,7 @@ def resolve_source(preferred, item, local_dir, cookie, stack):
             if source == "aws_s3" and not (os.environ.get("AWS_ACCESS_KEY_ID")
                                            or os.path.isfile(os.path.expanduser("~/.aws/credentials"))):
                 raise RuntimeError("No AWS account details found. Add them or choose another option.")
-            paths = source_paths(source, item, local_dir)
+            paths = source_paths(source, item, local_dir, cookie)
             datasets = [stack.enter_context(rasterio.open(paths[key]))
                         for key in ("b10", "b11", "qa")]
             _read_text(paths["mtl"], cookie)  # fail here rather than halfway through

@@ -93,7 +93,13 @@ def test_source_paths():
                        for k in ("lwir11", "lwir12", "qa_pixel", "MTL.json")}}
     paths = uhi_desktop.core.source_paths("aws_s3", item)
     assert paths["b10"] == "s3://usgs-landsat/x/SCENE_lwir11"
-    assert uhi_desktop.core.source_paths("usgs_https", item)["b11"].startswith("https://")
+    assert uhi_desktop.core.source_paths("usgs_https", item, cookie="abc")["b11"].startswith("https://")
+    try:
+        uhi_desktop.core.source_paths("usgs_https", item)
+    except RuntimeError as exc:
+        assert "login cookie" in str(exc)
+    else:
+        raise AssertionError("USGS HTTPS without a cookie must fail clearly")
 
 
 def _qapp():
@@ -139,6 +145,14 @@ def test_desktop_worker():
             with rasterio.open(result["lst_path"]) as lst:
                 assert lst.tags()["SOURCE_USED"] == "local"
                 assert lst.width > uhi_desktop.core.BLOCK_ROWS
+            from desktop_app.map_viewer import MapViewer, render
+            viewer = MapViewer(result)
+            assert viewer.layer.count() == 2 and not viewer._pixmap.isNull()
+            viewer.close()
+            for path, kind in ((result["lst_path"], "lst"), (result["uhi_path"], "uhi")):
+                image = render(path, kind)
+                assert not image.isNull() and image.width() > 0 and image.height() > 0
+                assert image.pixelColor(image.width() // 2, image.height() // 2).alpha() in (0, 255)
             print("ok desktop_worker: {} messages, mean {:.2f} C".format(
                 len(messages), result["stats"]["mean"]))
     finally:

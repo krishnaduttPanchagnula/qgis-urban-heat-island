@@ -22,8 +22,10 @@ from PySide6.QtWidgets import (
 HERE = os.path.dirname(os.path.abspath(__file__))
 try:  # pip-installed package
     from desktop_app import uhi_pip_core as core
+    from desktop_app.map_viewer import MapViewer
 except ImportError:  # running straight from a source checkout
     import uhi_pip_core as core
+    from map_viewer import MapViewer
 
 SOURCES = [
     ("Automatic - try all options", "auto"),
@@ -45,6 +47,7 @@ class App:
         self.worker = None
         self.cancel_event = threading.Event()
         self.last_output_dir = None
+        self.last_result = None
 
         layout = QVBoxLayout(root)
         title = QLabel("Make an urban heat island map from a satellite image")
@@ -81,8 +84,11 @@ class App:
         self.dates_button = QPushButton("Dates with images")
         self.dates_button.setToolTip("List dates with satellite images within 60 days")
         self.dates_button.clicked.connect(self.list_dates)
+        self.view_button = QPushButton("View maps")
+        self.view_button.clicked.connect(self.view_maps)
+        self.view_button.setEnabled(False)
         for button in (self.run_button, self.cancel_button, self.open_button,
-                       self.dates_button):
+                       self.dates_button, self.view_button):
             buttons.addWidget(button)
         layout.addLayout(buttons)
 
@@ -259,7 +265,14 @@ class App:
                                 payload["lst_path"], payload["uhi_path"]))
                 self.result.setPlainText(text)
                 self.open_button.setEnabled(True)
-                QMessageBox.information(self.root, "Finished", "Your two maps are ready.")
+                self.view_button.setEnabled(True)
+                self.last_result = payload
+                answer = QMessageBox.question(
+                    self.root, "Finished",
+                    "Your two maps are ready. Open the map viewer?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+                if answer == QMessageBox.StandardButton.Yes:
+                    self.view_maps()
             elif kind == "error":
                 self.status.setText("Could not finish: {}".format(payload))
                 QMessageBox.critical(self.root, "Something went wrong", payload)
@@ -291,6 +304,13 @@ class App:
                     subprocess.run(["xdg-open", path], check=False)
             except OSError:
                 QMessageBox.information(self.root, "Output folder", path)
+
+    def view_maps(self):
+        if self.last_result:
+            MapViewer(self.last_result, self.root).exec()
+        else:
+            QMessageBox.information(self.root, "View maps",
+                                    "Make the maps first, then view them here.")
 
 
 def main():
