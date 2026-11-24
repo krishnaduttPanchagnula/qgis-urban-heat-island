@@ -7,11 +7,23 @@ It finds the least-cloudy Landsat 8/9 scene within ±7 days, reads thermal bands
 - `LST_<location>_<date>` — continuous surface temperature in °C (Float32)
 - `UHI_<location>_<date>` — five heat-intensity classes (Byte, 0 = no data)
 
-## Install
+## Download and install
 
-Copy `uhi_landsat/` into your QGIS Python plugins folder, e.g.
-`~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/uhi_landsat/`, then
-enable **Urban Heat Island (Landsat 10/11)** in *Plugins → Manage and Install Plugins*.
+Download `uhi_landsat_plugin.zip` from the
+[latest release](https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island/releases/latest),
+or install straight from QGIS:
+
+1. *Plugins → Manage and Install Plugins → Settings…*
+2. Tick **Add new repository**, name it `Urban Heat Island`, and use this URL:
+   `https://raw.githubusercontent.com/krishnaduttPanchagnula/qgis-urban-heat-island/main/plugins.xml`
+3. Search for **Urban Heat Island (Landsat 10/11)** and click *Install Plugin*.
+
+Manual install: unzip the release into your QGIS Python plugins folder, e.g.
+`~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/`, so that
+`uhi_landsat/metadata.txt` sits directly under that folder. Restart QGIS and
+enable the plugin in *Plugins → Manage and Install Plugins*. The city/heat SVG
+icon appears in the plugin manager and on the plugin toolbar.
+
 No pip dependencies: QGIS already ships numpy and GDAL.
 
 ## Multiple data sources with fallback

@@ -12,6 +12,8 @@ from qgis.core import (
 from .uhi_core import Cancelled, CLASS_LABELS, compute
 from .uhi_dialog import UhiDialog
 
+ICON_PATH = os.path.join(os.path.dirname(__file__), "icon.svg")
+
 LST_COLORS = [(0, QColor("#2b3a67")), (12, QColor("#3b82b8")),
               (22, QColor("#8dc6a8")), (30, QColor("#e8c55a")),
               (40, QColor("#e2703a")), (55, QColor("#8b1a1a"))]
@@ -90,7 +92,7 @@ class UhiPlugin:
         self.action = None
 
     def initGui(self):
-        self.action = QAction(QIcon(), "Urban Heat Island (Landsat 10/11)",
+        self.action = QAction(QIcon(ICON_PATH), "Urban Heat Island (Landsat 10/11)",
                               self.iface.mainWindow())
         self.action.triggered.connect(self.run)
         self.iface.addToolBarIcon(self.action)

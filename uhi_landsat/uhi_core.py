@@ -251,8 +251,11 @@ def _read_text(path):
 
 def _flatten(obj, out):
     if isinstance(obj, dict):
-        for value in obj.values():
-            _flatten(value, out)
+        for key, value in obj.items():
+            if isinstance(value, (dict, list)):
+                _flatten(value, out)
+            else:
+                out[key] = value
     elif isinstance(obj, list):
         for value in obj:
             _flatten(value, out)
@@ -310,8 +313,8 @@ def _window(dataset, bbox):
     wgs84 = osr.SpatialReference()
     wgs84.ImportFromEPSG(4326)
     transform = osr.CoordinateTransformation(wgs84, source)
-    x1, y1, _ = transform.TransformPoint(bbox[0], bbox[1])
-    x2, y2, _ = transform.TransformPoint(bbox[2], bbox[3])
+    x1, y1, _ = transform.TransformPoint(bbox[0], bbox[1], 0)
+    x2, y2, _ = transform.TransformPoint(bbox[2], bbox[3], 0)
     gt = dataset.GetGeoTransform()
     minx, maxx = min(x1, x2), max(x1, x2)
     miny, maxy = min(y1, y2), max(y1, y2)
@@ -331,7 +334,7 @@ def _window(dataset, bbox):
 def _create(path, width, height, geotransform, projection, dtype, nodata):
     driver = gdal.GetDriverByName("GTiff")
     dataset = driver.Create(path, width, height, 1, dtype,
-                            ["COMPRESS=LZW", "TILED=YES", "BLOCKSIZE=256"])
+                            ["COMPRESS=LZW", "TILED=YES"])
     dataset.SetGeoTransform(geotransform)
     dataset.SetProjection(projection)
     dataset.GetRasterBand(1).SetNoDataValue(nodata)
