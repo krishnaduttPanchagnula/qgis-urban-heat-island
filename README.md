@@ -21,7 +21,10 @@ You do not need to know how to process satellite imagery. You just fill in a
 short form and the maps appear in your layer panel.
 
 **No QGIS?** There is also a standalone desktop app with exactly the same logic in
-[`desktop_app/`](desktop_app/README.md).
+[`desktop_app/`](desktop_app/README.md). Install it with
+`pip install git+https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island.git@v1.1.0`
+and launch it with `uhi-desktop`; the desktop README also covers conda, the release
+zip and running from source.
 
 ## Install
 

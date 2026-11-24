@@ -1,0 +1,18 @@
+[general]
+name=Urban Heat Island (Landsat 10/11)
+description=Turn a place, date and radius into easy-to-read temperature and heat-zone maps
+version=1.1.0
+qgisMinimumVersion=3.22
+author=Krishna Dutt Panchagnula
+email=krishnadutt123@gmail.com
+about=Just enter a date, a place name, the latitude and longitude of the centre of your area, and a radius. The plugin finds the clearest nearby Landsat satellite image and adds two ready-to-use layers to QGIS: a ground temperature map in degrees Celsius, and a simple five-zone map showing which parts of the area are cool, average, warm or hot spots. Clouds and water are left out automatically. If you have the satellite files in a folder, point the plugin to it; otherwise let it download them using your AWS account or USGS login. The plugin works in the background without freezing QGIS, and the maps are saved as GeoTIFF files in the output folder you choose. The README has step-by-step instructions written for GIS analysts.
+tracker=https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island/issues
+repository=https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island
+homepage=https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island
+changelog=https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island/blob/main/CHANGELOG.md
+tags=landsat,urban heat island,lst,land surface temperature,temperature,thermal,raster,remote sensing,heat
+icon=icon.svg
+category=Raster
+license=MIT
+experimental=False
+deprecated=False

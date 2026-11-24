@@ -1,0 +1,2 @@
+[console_scripts]
+uhi-desktop = desktop_app.uhi_desktop:main

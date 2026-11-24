@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "uhi-desktop"
+version = "1.1.0"
+description = "Standalone desktop app that maps urban heat islands from Landsat 10/11"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Krishna Dutt Panchagnula" }]
+keywords = ["qgis", "landsat", "urban heat island", "land surface temperature", "gis", "raster"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Topic :: Scientific/Engineering :: GIS",
+]
+dependencies = ["numpy>=1.21"]
+# GDAL Python bindings (from osgeo import gdal) are a system/conda dependency;
+# they are not declared here because PyPI has no portable wheel for GDAL.
+
+[project.scripts]
+uhi-desktop = "desktop_app.uhi_desktop:main"
+
+[project.urls]
+Homepage = "https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island"
+Source = "https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island"
+Issues = "https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island/issues"
+Downloads = "https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island/releases"
+
+[tool.setuptools]
+packages = ["uhi_landsat", "desktop_app"]
+
+[tool.setuptools.package-data]
+uhi_landsat = ["metadata.txt", "*.ui", "icon.svg"]
+desktop_app = ["icon.png", "README.md"]

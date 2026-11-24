@@ -14,8 +14,11 @@ from datetime import date, datetime, timedelta
 from tkinter import filedialog, messagebox, ttk
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(HERE, "..", "uhi_landsat"))
-import uhi_core as core  # noqa: E402
+try:  # pip-installed package
+    from uhi_landsat import uhi_core as core  # noqa: E402
+except ImportError:  # running straight from a source checkout
+    sys.path.insert(0, os.path.join(HERE, "..", "uhi_landsat"))
+    import uhi_core as core  # noqa: E402
 
 SOURCES = [
     ("Automatic - try all options", "auto"),

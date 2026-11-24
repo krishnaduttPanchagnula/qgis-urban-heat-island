@@ -21,29 +21,74 @@ Clouds and water are left out automatically. A progress bar keeps you informed a
 ## Requirements
 
 - Python 3.9 or newer
-- `numpy`
-- GDAL Python bindings (`from osgeo import gdal`)
+- `numpy` — installed automatically by pip
+- GDAL Python bindings (`from osgeo import gdal`) — a system dependency that pip
+  cannot install reliably, so install it with conda or your OS package manager
 
-The easy way to get GDAL is a conda environment:
+If you already have QGIS installed, its Python interpreter has everything needed.
+
+## Installation
+
+### 1. pip (recommended)
+
+```bash
+pip install git+https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island.git@v1.1.0
+```
+
+This adds a `uhi-desktop` command. Make sure GDAL is available in the same
+Python environment (see option 3).
+
+### 2. pip from the release zip
+
+Download `uhi_desktop_v1.1.0.zip` from the
+[release page](https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island/releases/latest)
+and install it directly:
+
+```bash
+pip install https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island/releases/download/v1.1.0/uhi_desktop_v1.1.0.zip
+```
+
+### 3. Conda (easiest way to get GDAL)
 
 ```bash
 conda create -n uhi python=3.11 numpy gdal -c conda-forge
 conda activate uhi
-python desktop_app/uhi_desktop.py
+pip install git+https://github.com/krishnaduttPanchagnula/qgis-urban-heat-island.git@v1.1.0
+uhi-desktop
 ```
 
-If you already have QGIS installed, its Python interpreter has everything needed.
+On Debian/Ubuntu you can also use `sudo apt install python3-gdal python3-numpy`
+and then install with `pip --break-system-packages` or inside a virtual environment.
 
-## Run it
+### 4. Download without installing
 
-From the repository root:
+Unzip `uhi_desktop_v1.1.0.zip` (it already contains both `desktop_app/` and the
+shared `uhi_landsat/` engine) and run:
 
 ```bash
 python desktop_app/uhi_desktop.py
 ```
 
-Double-clicking `uhi_desktop.py` also works on most systems if `.py` files are
-associated with Python.
+Double-clicking `uhi_desktop.py` also works where `.py` files are associated with Python.
+
+### 5. From a source checkout
+
+From the repository root:
+
+```bash
+pip install .
+```
+
+## Run it
+
+After a pip install, launch with:
+
+```bash
+uhi-desktop
+```
+
+or `python -m desktop_app.uhi_desktop`. From the repository root,
+`python desktop_app/uhi_desktop.py` works too.
 
 ## Getting the satellite data
 

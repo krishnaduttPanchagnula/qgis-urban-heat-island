@@ -7,7 +7,8 @@ All notable changes to this project are documented here.
 ### Added
 - Standalone desktop app (`desktop_app/`) with the same workflow and the same
   shared engine as the QGIS plugin, using a background thread so it never freezes.
-- Downloadable desktop zip containing the app and the shared engine.
+- Downloadable desktop zip containing the app and the shared engine, installable
+  with `pip` (`uhi-desktop` command), plus conda and source-checkout instructions.
 - Plain-language descriptions in the README, plugin metadata, repository listing
   and the dialogs, so GIS analysts can use it without processing satellite data manually.
 
