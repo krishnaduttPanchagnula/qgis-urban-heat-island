@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented here.
 
+## [1.2.1] - 2026-11-24
+
+### Fixed
+- Scene search now accepts LandsatLook's uppercase platform values (`LANDSAT_9`)
+  as well as Element84's lowercase ones, so scenes are found again.
+- Element84 L2 scene ids without a processing date are now converted to L1 ids
+  correctly, so the fallback catalogue works with current data.
+
 ## [1.2.0] - 2026-11-24
 
 ### Changed

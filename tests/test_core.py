@@ -74,6 +74,30 @@ def test_synthesise_l1_item():
     assert item["assets"]["lwir11"]["href"].endswith("_B10.TIF")
 
 
+def test_new_scene_id_and_platform_case():
+    import uhi_common
+
+    item = core._synthesise_l1_item({
+        "id": "LC09_L2SP_194029_20261101_02_T1",
+        "properties": {"datetime": "2026-11-01T10:00:00Z"},
+    })
+    assert item["id"] == "LC09_L1GT_194029_20261101_20261101_02_T1"
+
+    original = uhi_common._get_json
+    uhi_common._get_json = lambda url: {"features": [{
+        "id": "LC09_L1TP_194029_20261101_20261101_02_T1",
+        "properties": {"platform": "LANDSAT_9", "landsat:cloud_cover_land": 5.0,
+                       "datetime": "2026-11-01T10:00:00Z"},
+    }]}
+    try:
+        candidates = uhi_common._query_catalog(
+            "https://example.test", "landsat-c2l1", [9.0, 45.0, 9.5, 45.5],
+            core._date("2026-11-01"), 7, "landsat:cloud_cover_land")
+        assert len(candidates) == 1
+    finally:
+        uhi_common._get_json = original
+
+
 if __name__ == "__main__":
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

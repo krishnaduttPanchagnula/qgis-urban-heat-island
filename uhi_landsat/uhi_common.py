@@ -91,7 +91,9 @@ def _query_catalog(url, collection, bbox, day, days, cloud_field):
     candidates = []
     for feature in features:
         props = feature.get("properties", {})
-        if props.get("platform") not in ("landsat-8", "landsat-9"):
+        # LandsatLook reports "LANDSAT_9", Element84 reports "landsat-9".
+        platform = str(props.get("platform", "")).lower().replace("_", "-").replace(" ", "-")
+        if platform not in ("landsat-8", "landsat-9"):
             continue
         cloud = props.get(cloud_field, props.get("landsat:cloud_cover_land"))
         if cloud is None or cloud > 50:
@@ -105,12 +107,14 @@ def _query_catalog(url, collection, bbox, day, days, cloud_field):
 def _synthesise_l1_item(feature):
     """Turn an Earth Search L2 item into LandsatLook-shaped L1 asset hrefs."""
     parts = feature["id"].split("_")
-    if len(parts) < 7 or not parts[2].isdigit():
+    # Old ids carry a processing date (LC09_L2SP_ppprrr_YYYYMMDD_YYYYMMDD_02_T1);
+    # newer ones do not (LC09_L2SP_ppprrr_YYYYMMDD_02_T1).
+    if len(parts) < 6 or not parts[2].isdigit() or not parts[3].isdigit():
         return None
     sensor, pathrow, acquired = parts[0], parts[2], parts[3]
-    category = parts[5]
+    category, tier = parts[-2], parts[-1]
     path, row = pathrow[:3], pathrow[3:]
-    l1 = "{}_L1GT_{}_{}_{}_{}_{}".format(sensor, pathrow, acquired, acquired, category, parts[6])
+    l1 = "{}_L1GT_{}_{}_{}_{}_{}".format(sensor, pathrow, acquired, acquired, category, tier)
     base = "https://landsatlook.usgs.gov/data/collection02/level-1/standard/oli-tirs/{}/{}/{}/{}".format(
         acquired[:4], path, row, l1)
     assets = {
